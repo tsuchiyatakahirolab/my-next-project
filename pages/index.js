@@ -56,14 +56,16 @@ export default function Home({ posts }) {
         <h2 className={styles.heading}>All Posts</h2>
         <ol className={styles.posts}>
           {posts.map((post) => {
-            const date = new Date(post.last_edited_time).toLocaleString(
-              "en-US",
-              {
-                month: "short",
-                day: "2-digit",
-                year: "numeric",
-              }
-            );
+            const publishDateValue = post.properties["Publish Date"]?.date?.start;
+  
+  // 値があればフォーマット、なければ日付なし表示
+  const date = publishDateValue
+    ? new Date(publishDateValue).toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "日付なし";
             return (
               <li key={post.id} className={styles.post}>
                 <h3 className={styles.postTitle}>
@@ -73,8 +75,8 @@ export default function Home({ posts }) {
                     </a>
                   </Link>
                 </h3>
-
-                <p className={styles.postDescription}>{date}</p>
+            
+                  <p className={styles.postDescription}>{date}</p>
                 <Link href={`/${post.id}`}>
                   <a> Read post →</a>
                 </Link>
@@ -87,5 +89,14 @@ export default function Home({ posts }) {
   );
 }
 
-//SSGを追加
+//ISRを追加
+export const getStaticProps = async () => {
+  const database = await getDatabase(databaseId);
 
+  return {
+    props: {
+      posts: database,
+    },
+    revalidate: 1, // 1秒ごとに再生成
+  };
+}
